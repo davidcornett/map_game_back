@@ -1,0 +1,25 @@
+User Features ----------------------------------------
+- centered resulting country in screen (or well-framed)
+- require user county selections to be contiguous 
+- track square mileage in user selections, limiting further selections after limit is reached
+- Add emblems for city, water, peaks, forests, etc.
+- Track user records (e.g. highest population, income)
+- User saving a country
+- Challenge levels
+- Competitive mode
+
+
+Back-end ---------------------------------------------
+- use inheritance to remove some duplicate methods between Country and County objects
+- map generation: add selected counties to empty map instead of setting 1000s counties as invisible
+- control sessions by database instead of by global state in flask server
+- educational institution data
+- military base data
+- incorrect demographic data: race data is off - try to get 2020 census data
+- economic data
+
+
+COMPLETED --------------------------------------------
+- population data implemented
+- by-race/ethnic group data implemented
+- DB contains wealth and .edu data

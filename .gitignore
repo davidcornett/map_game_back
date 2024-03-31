@@ -1,0 +1,7 @@
+**/.vscode
+**/venv
+**/map_env
+**/art
+**/.env
+**/.token
+**/.token.txt

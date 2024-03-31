@@ -1,0 +1,24 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .row {
+    flex-direction: row;
+  }
+  
+  .svg-container {
+    overflow: hidden;
+    height: 400px;
+    width: 800px;
+  }
+  
+  svg {
+    transition: transform 0.1s linear 0.1s;
+  }
+
+  #map {
+    border: 3px solid red;
+}

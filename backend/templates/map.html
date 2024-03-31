@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Map Game</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='example.css') }}">
+  </head>
+  <body>
+    <div class="container">
+      <div class="container row">
+        <button id="left-button">left</button>
+        <button id="right-button">right</button>
+        <button id="up-button">up</button>
+        <button id="down-button">down</button>
+        <button id="zoom-in-button">zoom-in</button>
+        <button id="zoom-out-button">zoom-out</button>
+      </div>
+
+      <div class="svg-container">
+        <object id='map' data="{{ url_for('static', filename='usa-all-counties.svg') }}" type="image/svg+xml"></object>
+
+      </div>   
+
+    </div>   
+      
+      <div class='wrapper'>
+        <h3>Current County:</h3>
+        <p id='currentCounty'></p>
+        <h3> Number of Counties Selected:</h3>
+        <p id='countyCount'>0</p>
+        <h3> Total Square Mileage Selected/Allowed:</h3>
+        <span id='area'>0</span>
+        <span>/{{max_area}}</span>
+      </div>
+
+      <form action="{{ url_for('map') }}" method='post'>
+        <fieldset>
+            <legend><H3>Build Your Country</H3></legend>
+            <p>
+              <input type="hidden" id="counties" name="counties">
+            <input id="submit_country" type="submit" value="BUILD" />
+        </fieldset>
+    </form>
+
+
+      <!-- <script src='svg_script.js' type='text/javascript'></script> -->
+      <script src="{{ url_for('static', filename='svg_script.js') }}"></script>
+      <script src="{{ url_for('static', filename='example.js') }}"></script>
+
+  </body>
+</html>

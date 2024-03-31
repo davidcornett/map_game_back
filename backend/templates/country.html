@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Your New Country</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='example.css') }}">
+  </head>
+  <body>
+
+
+      <div class="svg-container">
+      <object id='map' data="{{ url_for('static', filename='template.svg') }}" type="image/svg+xml"></object>
+      </div>
+    </div>
+
+
+    <p>Your population: {{country.get_pop()}}</p>
+    <p>Your land area (sq miles): {{country.get_area()}}</p>
+    <table>
+      <caption>Ethnic/racial Background Statistics</caption>
+      <tr>
+        <th>Ethnic/racial group</th>
+        <th>Population (%)</th>
+      </tr>
+
+      <tr>
+        <td>Asian-only</td>
+        <td id="asian_perc">{{ "{0:0.1%}".format(country.get_racial_percentage("asian")) }}</td>
+      </tr>
+      <tr>
+        <td>Black/African American-only</td>
+        <td id="black_perc">{{ "{0:0.1%}".format(country.get_racial_percentage("black")) }}</td>
+      </tr>
+      <tr>
+        <td>Hispanic (of any race)</td>
+        <td id="hispanic_perc">{{ "{0:0.1%}".format(country.get_racial_percentage("hispanic")) }}</td>
+      </tr>
+      <tr>
+        <td>Native American-only</td>
+        <td id="native_perc">{{ "{0:0.1%}".format(country.get_racial_percentage("native")) }}</td>
+      </tr>
+      <tr>
+        <td>Pacific Islander-only</td>
+        <td id="pacific_perc">{{ "{0:0.1%}".format(country.get_racial_percentage("pac_isl")) }}</td>
+      </tr>
+      <tr>
+        <td>Two-plus Races</td>
+        <td id="multi_perc">{{ "{0:0.1%}".format(country.get_racial_percentage("two_plus_races")) }}</td>
+      </tr>
+      <tr>
+        <td>White-only</td>
+        <td id="white_perc">{{ "{0:0.1%}".format(country.get_racial_percentage("white_not_hispanic")) }}</td>
+      </tr>
+
+
+
+    </table>
+
+      <script src="{{ url_for('static', filename='build_map.js') }}"></script>
+      <script src="{{ url_for('static', filename='panZoomAuto.js') }}"></script>
+
+  </body>
+</html>
