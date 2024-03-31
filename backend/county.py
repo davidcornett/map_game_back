@@ -1,9 +1,10 @@
 import psycopg2
 from psycopg2 import sql
+from db import get_db_cursor
 
 # Configuration
-con = psycopg2.connect(dbname='mapgame', user='davidcornett', host='localhost')
-cur = con.cursor()
+#con = psycopg2.connect(dbname='mapgame', user='davidcornett', host='localhost')
+#cur = con.cursor()
 
 class County:
     def __init__(self, id: str):
@@ -15,7 +16,7 @@ class County:
         #self._poverty_rate = None
         self._per_capita_income = None
         self._gdp = None
-        con.commit()
+        #con.commit()
 
     def get_id(self) -> str:
         return self._id
@@ -28,8 +29,9 @@ class County:
 
     def set_name(self) -> str:
         name_query = """ SELECT countyName FROM counties WHERE countyID =%s;"""
-        cur.execute(name_query, [self._id])
-        return cur.fetchone()[0]
+        with get_db_cursor() as cur:
+            cur.execute(name_query, (self._id,))
+            return cur.fetchone()[0]
 
     def set_pop(self) -> int:
         pop_query = """
@@ -37,8 +39,9 @@ class County:
                 WHERE year=2021 AND countyID=%s;
                 """
         
-        cur.execute(pop_query, [self._id])
-        return cur.fetchone()[0]
+        with get_db_cursor() as cur:
+            cur.execute(pop_query, (self._id,))
+            return cur.fetchone()[0]
 
     def set_unemployment_rate(self) -> float:
         unemployment_query = """
@@ -46,30 +49,22 @@ class County:
                 WHERE year=2019 AND countyID=%s;
                 """
         
-        cur.execute(unemployment_query, [self._id])
-        self._unemployment_rate = cur.fetchone()[0]
+        with get_db_cursor() as cur:
+            cur.execute(unemployment_query, (self._id,))
+            self._unemployment_rate = cur.fetchone()[0]
         #return cur.fetchone()[0]
     
     def get_unemployment_rate(self) -> float:
         return self._unemployment_rate
 
-    def set_poverty_rate(self) -> float:
-        poverty_query = """
-                SELECT poverty_rate FROM countyid_year
-                WHERE year=2019 AND countyID=%s;
-                """
-        
-        cur.execute(poverty_query, [self._id])
-        return cur.fetchone()[0]
-    
     def set_per_capita_income(self) -> int:
         income_query = """
                 SELECT per_capita_income FROM countyid_year
                 WHERE year=2019 AND countyID=%s;
                 """
-        
-        cur.execute(income_query, [self._id])
-        self._per_capita_income = cur.fetchone()[0]
+        with get_db_cursor() as cur:
+            cur.execute(income_query, [self._id])
+            self._per_capita_income = cur.fetchone()[0]
 
     def get_per_capita_income(self) -> int:
         return self._per_capita_income
@@ -80,9 +75,9 @@ class County:
                 SELECT gdp FROM countyid_year
                 WHERE year=2022 AND countyID=%s;
                 """
-        
-        cur.execute(gdp_query, [self._id])
-        self._gdp = cur.fetchone()[0] * 1000 # convert SQL data, stored in in 1000s
+        with get_db_cursor() as cur:
+            cur.execute(gdp_query, [self._id])
+            self._gdp = cur.fetchone()[0] * 1000 # convert SQL data, stored in in 1000s
 
     def get_gdp(self) -> int:
         return self._gdp
@@ -96,8 +91,9 @@ class County:
                 """
         
         query = sql.SQL(query_syntax).format(sql.SQL(", ").join(map(sql.Identifier, races)))
-        cur.execute(query, [self._id])
-        query_result = cur.fetchall()[0]
+        with get_db_cursor() as cur:
+            cur.execute(query, [self._id])
+            query_result = cur.fetchall()[0]
         d = {}
         for i in range(len(races)):
             d[races[i]] = query_result[i]
@@ -106,7 +102,8 @@ class County:
 
     def get_area(self) -> float:
         area_query = """ SELECT size from counties WHERE countyID =%s;"""
-        cur.execute(area_query, [self._id])
-        return cur.fetchone()[0]
+        with get_db_cursor() as cur:
+            cur.execute(area_query, [self._id])
+            return cur.fetchone()[0]
     
     
