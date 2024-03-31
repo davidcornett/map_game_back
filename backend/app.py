@@ -18,10 +18,6 @@ county_adjacencies = [] # array of linked lists
 # global var: TBD replace with DB calls
 player_country = None
 
-# globals to control country sizes - TBD replace when different modes allowed
-max_area = 50000
-min_area = 0
-
 # Configuration
 app = Flask(__name__)
 CORS(app)  # enable CORS for all routes
@@ -66,29 +62,6 @@ def svg():
     return jsonify(path_dict)
 
     return "44"
-
-@app.route('/map', methods=['GET', 'POST'])
-def map():
-    
-    if request.method == 'POST':
-        
-        countyID_string = request.form['counties']
-        countyID_list = process_countyID(countyID_string)
-        global player_country
-        player_country = createCountry(countyID_list)
- 
-        # check that country is contigious and within allowed area range
-        if not check_validity(player_country):
-            return "Error: invalid country"
-        
-        #player_country.set_races()
-
-        # create_new_map([x.get_id() for x in player_country.get_counties()], "namey")
- 
-        return render_template("country.html", country = player_country)
-
-    else:
-        return render_template("map.html", max_area = max_area)
 
 @app.route('/get_ids')
 def get_ids() -> array:
@@ -153,9 +126,9 @@ def adjacency():
                 county_adjacencies.append(data[i])
 
 
-def check_validity(country: object) -> tuple[bool, str]:
+def check_validity(country: object, max_area) -> tuple[bool, str]:
     # CHECK 1: AREA
-    if country.get_area() not in range(min_area, max_area):
+    if country.get_area() not in range(0, max_area):
         return False, "Country area is not within allowed size range."
 
     # CHECK 2: ADJACENCY
@@ -214,11 +187,12 @@ def adj_binary_search(id: int) -> bool:
 def get_new_country():
     data = request.get_json()
     selected_county_ids = data.get('selected_county_ids', [])
+    max_area = data.get('max_area', 100000)
     global player_country
     player_country = createCountry(selected_county_ids)
 
     # check that country is contigious and within allowed area range
-    is_valid_country, error_message = check_validity(player_country)
+    is_valid_country, error_message = check_validity(player_country, max_area)
     #print(player_country.get_pop())
 
     if not is_valid_country:
