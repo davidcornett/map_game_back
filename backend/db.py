@@ -35,5 +35,12 @@ def get_db_cursor(commit=False):
         cur.close()
         db_pool.putconn(con)
 
+def get_all_challenges():
+    with get_db_cursor() as cur:
+        cur.execute("SELECT * FROM challenges WHERE active = TRUE;")
+        rows = cur.fetchall()  # Get all rows as a list of tuples
+        column_names = [desc[0] for desc in cur.description]  # Extract column names
+        challenges_dicts = [dict(zip(column_names, row)) for row in rows]  # Create a list of dictionaries
 
-# Add more functions as necessary for your database operations
+        return challenges_dicts  # This could be returned to a Flask route for JSON serialization
+

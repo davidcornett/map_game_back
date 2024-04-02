@@ -7,6 +7,8 @@ from county import County
 from country import Country
 import csv
 import geojson
+from db import get_all_challenges 
+from db import get_db_cursor
 
 #from svg.path import parse_path
 #from svg.path.path import Line
@@ -236,6 +238,41 @@ def filter_geojson_by_counties(selected_county_ids):
     }
 
     return filtered_geojson
+
+@app.route('/challenges', methods=['GET'])
+def get_challenges():
+    try:
+        challenges = get_all_challenges()  # Fetch challenges from the database
+        return jsonify(challenges), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+
+@app.route('/leaderboard', methods=['GET'])
+def get_leaderboard():
+    challenge_id = request.args.get('challenge_id', default=None, type=int)
+    
+    query = """
+        SELECT display_name, score, completion_date FROM scores
+    """
+    params = ()
+    if challenge_id is not None:
+        query += " WHERE challenge_id = %s"
+        query += " ORDER BY score DESC"
+        params = (challenge_id,)
+    else:
+        query += " ORDER BY score DESC"
+    
+    with get_db_cursor() as cur:
+        cur.execute(query, params)
+        rows = cur.fetchall()
+        leaderboard_entries = [dict(zip([column[0] for column in cur.description], row)) for row in rows]
+    
+    return jsonify(leaderboard_entries)
+
+
+
 
 
 # Listener
