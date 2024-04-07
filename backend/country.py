@@ -12,6 +12,8 @@ class Country:
         self._unemployment_rate = None
         self._per_capita_income = None
         self._gdp = None
+        self._challenge = None
+        self._challenge_score = None
     
     def get_counties(self):
         return self._counties
@@ -67,3 +69,18 @@ class Country:
 
     def get_gdp(self) -> int:
         return self._gdp
+    
+    def set_challenge(self, challenge):
+        self._challenge = challenge
+
+    def set_challenge_score(self, key: str):
+        # Match the provided key to the corresponding attribute
+        if key == 'total_population':
+            self._challenge_score = self.get_pop()
+        elif key == 'gdp':
+            self._challenge_score = self.get_gdp()
+        else:
+            return None
+
+    def get_challenge_score(self) -> int:
+        return self._challenge_score

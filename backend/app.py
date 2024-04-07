@@ -7,6 +7,7 @@ from county import County
 from country import Country
 import csv
 import geojson
+import uuid
 from db import get_all_challenges 
 from db import get_db_cursor
 
@@ -130,6 +131,7 @@ def adjacency():
 
 def check_validity(country: object, max_area) -> tuple[bool, str]:
     # CHECK 1: AREA
+    print(f"max_area: {max_area}")
     if country.get_area() not in range(0, max_area):
         return False, "Country area is not within allowed size range."
 
@@ -189,7 +191,8 @@ def adj_binary_search(id: int) -> bool:
 def get_new_country():
     data = request.get_json()
     selected_county_ids = data.get('selected_county_ids', [])
-    max_area = data.get('max_area', 100000)
+    print(data)
+    max_area = data.get('maxArea', 100000)
     global player_country
     player_country = createCountry(selected_county_ids)
 
@@ -204,6 +207,11 @@ def get_new_country():
         player_country.set_unemployment_rate()
         player_country.set_per_capita_income()
         player_country.set_gdp()
+
+        if data['challenge']:
+            player_country.set_challenge_score(data['statKey'])
+            submit_score(data, player_country.get_challenge_score())
+
         filtered_geojson = filter_geojson_by_counties(selected_county_ids)
     
         response_data = {
@@ -219,7 +227,8 @@ def get_new_country():
                 "pop_white": player_country.get_racial_percentage('white_not_hispanic'),
                 "perCapIncome": player_country.get_per_capita_income(),
                 "unemploymentRate": player_country.get_unemployment_rate(),
-                "gdp": player_country.get_gdp()
+                "gdp": player_country.get_gdp(),
+                "challengeScore": player_country.get_challenge_score() or "N/A"
             }
         }
         return response_data, 200
@@ -248,28 +257,53 @@ def get_challenges():
         return jsonify({'error': str(e)}), 500
 
 
-
 @app.route('/leaderboard', methods=['GET'])
 def get_leaderboard():
-    challenge_id = request.args.get('challenge_id', default=None, type=int)
-    
+    challenge_name = request.args.get('name', default=None, type=str)
+    max_area = request.args.get('maxArea', default=None, type=int)
+
+    if not challenge_name or max_area is None:
+        # Early return if required parameters are missing
+        return jsonify({'error': 'Missing required parameters: name and maxArea'}), 400
+
+    # Prepare the query with JOIN and WHERE clauses for filtering
     query = """
-        SELECT display_name, score, completion_date FROM scores
+        SELECT s.display_name, s.score, s.completion_date FROM scores s
+        JOIN challenges c ON s.challenge_id = c.challenge_id
+        WHERE c.name = %s AND c.max_area = %s
+        ORDER BY s.score DESC
     """
-    params = ()
-    if challenge_id is not None:
-        query += " WHERE challenge_id = %s"
-        query += " ORDER BY score DESC"
-        params = (challenge_id,)
-    else:
-        query += " ORDER BY score DESC"
-    
+    params = (challenge_name, max_area,)
+
     with get_db_cursor() as cur:
         cur.execute(query, params)
         rows = cur.fetchall()
-        leaderboard_entries = [dict(zip([column[0] for column in cur.description], row)) for row in rows]
-    
+
+        # Construct a list of dictionaries for each row in the query result
+        leaderboard_entries = [
+            dict(zip([desc[0] for desc in cur.description], row))
+            for row in rows
+        ]
     return jsonify(leaderboard_entries)
+
+def submit_score(data: dict, score: int):
+    displayName = data.get('displayName', 'Anonymous')  # Default to 'Anonymous' if not provided
+    challenge_id = data['challenge']['challenge_id']
+    
+    # Generate a UUID for the session
+    session_id = str(uuid.uuid4())
+
+    try:
+        with get_db_cursor(commit=True) as cur:
+            cur.execute("""
+                INSERT INTO scores (session_id, display_name, challenge_id, score)
+                VALUES (%s, %s, %s, %s)
+            """, (session_id, displayName, challenge_id, score))
+    except Exception as e:
+    # Handle any errors that occur during insert
+        return jsonify({"error": str(e)}), 500
+    
+    return jsonify({"message": "Score submitted successfully"}), 201
 
 
 
