@@ -8,6 +8,8 @@ from country import Country
 import csv
 import geojson
 import uuid
+from dotenv import load_dotenv
+import requests
 from db import get_all_challenges 
 from db import get_db_cursor
 
@@ -22,6 +24,8 @@ county_adjacencies = [] # array of linked lists
 player_country = None
 
 # Configuration
+load_dotenv()  # Load environment variables from .env file
+
 app = Flask(__name__)
 CORS(app)  # enable CORS for all routes
 
@@ -306,6 +310,22 @@ def submit_score(data: dict, score: int):
     return jsonify({"message": "Score submitted successfully"}), 201
 
 
+@app.route('/get_national_parks', methods=['GET'])
+def get_national_parks():
+    park_codes = 'cong,yose,lavo'
+    api_key = os.getenv('NPS_API_KEY')  # Load API key from environment variables
+
+    try:
+        nps_url = f'https://developer.nps.gov/api/v1/parks?parkCode={park_codes}&api_key={api_key}'
+        response = requests.get(nps_url)
+        if response.status_code == 200:
+            parks_data = response.json().get('data', [])
+            print(jsonify(parks_data))
+            return jsonify(parks_data)
+        else:
+            return jsonify({'error': 'Failed to fetch data from NPS API'}), response.status_code
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 
