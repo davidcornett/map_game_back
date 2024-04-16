@@ -199,6 +199,7 @@ def get_new_country():
     max_area = data.get('maxArea', 100000)
     global player_country
     player_country = createCountry(selected_county_ids)
+    get_parks(selected_county_ids)
 
     # check that country is contigious and within allowed area range
     is_valid_country, error_message = check_validity(player_country, max_area)
@@ -327,6 +328,25 @@ def get_national_parks():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+def get_parks(county_ids: list):
+    try:
+        with get_db_cursor() as cur:
+            cur.execute("""
+                    SELECT DISTINCT np.name, np.unit_code
+                    FROM national_parks np
+                    JOIN county_coords cc ON ST_Intersects(np.geom, cc.geom)
+                    WHERE cc.geoid = ANY(%s);
+                """, (county_ids,))
+                
+            national_parks = cur.fetchall()
+            # Format the results as a list of dictionaries or another suitable format
+            parks = [{'name': row[0], 'unit_code': row[1]} for row in national_parks]
+            print(parks)
+            return jsonify(parks)
+        
+    except Exception as e:
+        print(e)
+        return jsonify({'error': 'Unable to process the request'}), 500
 
 
 # Listener
