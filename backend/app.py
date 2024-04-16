@@ -195,11 +195,10 @@ def adj_binary_search(id: int) -> bool:
 def get_new_country():
     data = request.get_json()
     selected_county_ids = data.get('selected_county_ids', [])
-    print(data)
+
     max_area = data.get('maxArea', 100000)
     global player_country
     player_country = createCountry(selected_county_ids)
-    get_parks(selected_county_ids)
 
     # check that country is contigious and within allowed area range
     is_valid_country, error_message = check_validity(player_country, max_area)
@@ -311,13 +310,21 @@ def submit_score(data: dict, score: int):
     return jsonify({"message": "Score submitted successfully"}), 201
 
 
-@app.route('/get_national_parks', methods=['GET'])
+@app.route('/get_national_parks', methods=['POST'])
 def get_national_parks():
-    park_codes = 'cong,yose,lavo'
+    data = request.get_json()
+    selected_county_ids = data.get('selected_county_ids', [])
+
+    # get list of park codes that intersect with selected counties
+    park_codes = get_parks(selected_county_ids)
+
+    # Format list for use in API query
+    park_codes_string = ','.join(set(park_codes))
+    
     api_key = os.getenv('NPS_API_KEY')  # Load API key from environment variables
 
     try:
-        nps_url = f'https://developer.nps.gov/api/v1/parks?parkCode={park_codes}&api_key={api_key}'
+        nps_url = f'https://developer.nps.gov/api/v1/parks?parkCode={park_codes_string}&api_key={api_key}'
         response = requests.get(nps_url)
         if response.status_code == 200:
             parks_data = response.json().get('data', [])
@@ -328,21 +335,30 @@ def get_national_parks():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-def get_parks(county_ids: list):
+def get_parks(county_ids: list) -> list:
     try:
         with get_db_cursor() as cur:
             cur.execute("""
                     SELECT DISTINCT np.name, np.unit_code
                     FROM national_parks np
                     JOIN county_coords cc ON ST_Intersects(np.geom, cc.geom)
-                    WHERE cc.geoid = ANY(%s);
+                    WHERE cc.geoid = ANY(%s)
+                    AND np.unit_type IN ('National Monument', 'National Park');
                 """, (county_ids,))
                 
             national_parks = cur.fetchall()
-            # Format the results as a list of dictionaries or another suitable format
-            parks = [{'name': row[0], 'unit_code': row[1]} for row in national_parks]
-            print(parks)
-            return jsonify(parks)
+
+            # account for Sequoia and Kings Canyon which are merged by NPS
+            park_code_overrides = {
+                'KICA': 'SEKI',
+                'SEQU': 'SEKI'
+            }
+
+            # Get list of all matched park codes, accounting for any overrides
+            park_codes = [park_code_overrides.get(code[1], code[1]) for code in national_parks]
+            print(park_codes)
+  
+            return park_codes
         
     except Exception as e:
         print(e)
