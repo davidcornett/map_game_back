@@ -309,7 +309,6 @@ def submit_score(data: dict, score: int):
     
     return jsonify({"message": "Score submitted successfully"}), 201
 
-
 @app.route('/get_national_parks', methods=['POST'])
 def get_national_parks():
     data = request.get_json()
@@ -317,10 +316,43 @@ def get_national_parks():
 
     # get list of park codes that intersect with selected counties
     park_codes = get_parks(selected_county_ids)
+    
+    # If no parks are found inside the country, return an empty list
+    if not park_codes:
+        return jsonify({'data': [], 'message': 'No matching national parks found'}), 200
 
     # Format list for use in API query
     park_codes_string = ','.join(set(park_codes))
+
+    api_key = os.getenv('NPS_API_KEY')  # Load API key from environment variables
+    try:
+        nps_url = f'https://developer.nps.gov/api/v1/parks?parkCode={park_codes_string}&api_key={api_key}'
+        response = requests.get(nps_url)
+        if response.status_code == 200:
+            parks_data = response.json().get('data', [])
+            return jsonify({'data': parks_data, 'message': 'Parks data fetched successfully'})
+        else:
+            return jsonify({'data': [], 'message': 'Failed to fetch data from NPS API'}), response.status_code
+    except Exception as e:
+        return jsonify({'data': [], 'message': str(e)}), 500
+
+"""
+@app.route('/get_national_parks', methods=['POST'])
+def get_national_parks():
+    data = request.get_json()
+    selected_county_ids = data.get('selected_county_ids', [])
+
+    # get list of park codes that intersect with selected counties
+    park_codes = get_parks(selected_county_ids)
     
+    # If no parks are found inside the country, return an empty list
+    if not park_codes:
+        return jsonify({'data': [], 'message': 'No matching national parks found'}), 200
+
+
+    # Format list for use in API query
+    park_codes_string = ','.join(set(park_codes))
+
     api_key = os.getenv('NPS_API_KEY')  # Load API key from environment variables
 
     try:
@@ -334,6 +366,7 @@ def get_national_parks():
             return jsonify({'error': 'Failed to fetch data from NPS API'}), response.status_code
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+"""
 
 def get_parks(county_ids: list) -> list:
     try:
