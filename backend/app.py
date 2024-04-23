@@ -59,10 +59,10 @@ def process_countyID(id: str) -> list:
     output.append(elem)  # add last character group, not terminating with comma
     return output
 
-def createCountry(county_ids: list) -> object:
+def createCountry(county_ids: list, name: str, creator: str) -> object:
     # returns Country, comprised of Counties
     county_list = [County(id) for id in county_ids] # create list of County objects from list of county IDs
-    return Country(county_list)
+    return Country(county_list, name, creator)
 
 
 def build_new_map(county_ids: list) -> str:
@@ -147,7 +147,10 @@ def get_new_country():
 
     max_area = data.get('maxArea', 100000)
     global player_country
-    player_country = createCountry(selected_county_ids)
+    name = data.get('countryName', 'Unknown') 
+    creator = data.get('displayName', 'Anonymous')
+    print(f'name: {name}, creator: {creator}')
+    player_country = createCountry(selected_county_ids, name, creator)
 
     # check that country is contigious and within allowed area range
     is_valid_country, error_message = check_validity(player_country, max_area)
@@ -170,6 +173,8 @@ def get_new_country():
         response_data = {
             "geojson": filtered_geojson, 
             "stats": {
+                "name": player_country.get_name(),
+                "creator": player_country.get_creator(),
                 "total_population": player_country.get_pop(), 
                 "pop_black": player_country.get_racial_percentage('black'),
                 "pop_native": player_country.get_racial_percentage('native'),
@@ -221,7 +226,7 @@ def get_leaderboard():
 
     # Prepare the query with JOIN and WHERE clauses for filtering
     query = """
-        SELECT s.display_name, s.score, s.completion_date FROM scores s
+        SELECT s.display_name, s.score, s.country_name, s.completion_date FROM scores s
         JOIN challenges c ON s.challenge_id = c.challenge_id
         WHERE c.name = %s AND c.max_area = %s
         ORDER BY s.score DESC
@@ -240,18 +245,19 @@ def get_leaderboard():
     return jsonify(leaderboard_entries)
 
 def submit_score(data: dict, score: int):
-    displayName = data.get('displayName', 'Anonymous')  # Default to 'Anonymous' if not provided
+    display_name = data.get('displayName', 'Anonymous')  # Default to 'Anonymous' if not provided
+    country_name = data.get('countryName', 'Unknown')  # Default to 'Unknown' if not provided
     challenge_id = data['challenge']['challenge_id']
     
     # Generate a UUID for the session
     session_id = str(uuid.uuid4())
-
+    
     try:
         with get_db_cursor(commit=True) as cur:
             cur.execute("""
-                INSERT INTO scores (session_id, display_name, challenge_id, score)
-                VALUES (%s, %s, %s, %s)
-            """, (session_id, displayName, challenge_id, score))
+                INSERT INTO scores (session_id, display_name, challenge_id, score, country_name)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (session_id, display_name, challenge_id, score, country_name))
     except Exception as e:
     # Handle any errors that occur during insert
         return jsonify({"error": str(e)}), 500

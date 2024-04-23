@@ -4,8 +4,10 @@ from collections import defaultdict
 county_adjacencies = [] # array of linked lists
 
 class Country:
-    def __init__(self, counties: list):
+    def __init__(self, counties: list, name: str, creator: str):
         self._counties = counties
+        self._name = name
+        self._creator = creator
         self._area = sum(county.get_area() for county in self._counties)
         self._pop = sum(county.get_pop() for county in self._counties)
         self._racial_breakdown = None
@@ -17,6 +19,12 @@ class Country:
     
     def get_counties(self):
         return self._counties
+    
+    def get_name(self) -> str:
+        return self._name
+    
+    def get_creator(self) -> str:
+        return self._creator
 
     def get_pop(self) -> int:
         return self._pop
