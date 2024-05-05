@@ -16,6 +16,7 @@ class Country:
         self._gdp = None
         self._challenge = None
         self._challenge_score = None
+        self._land_cover = {}
     
     def get_counties(self):
         return self._counties
@@ -92,3 +93,19 @@ class Country:
 
     def get_challenge_score(self) -> int:
         return self._challenge_score
+    
+    def set_land_cover(self):
+        for i in range(len(self._counties)):
+            self._counties[i].set_land_cover()
+            for key in self._counties[i]._land_cover.keys():
+                
+                if key in self._land_cover:
+                    self._land_cover[key] += self._counties[i]._land_cover[key]
+                else:
+                    self._land_cover[key] = self._counties[i]._land_cover[key]
+            #print(self._land_cover)
+
+    def get_land_cover(self) -> dict:
+        return self._land_cover
+
+

@@ -84,7 +84,6 @@ def adjacency():
 
 def check_validity(country: object, max_area) -> tuple[bool, str]:
     # CHECK 1: AREA
-    print(f"max_area: {max_area}")
     if country.get_area() not in range(0, max_area):
         return False, "Country area is not within allowed size range."
 
@@ -149,7 +148,6 @@ def get_new_country():
     global player_country
     name = data.get('countryName', 'Unknown') 
     creator = data.get('displayName', 'Anonymous')
-    print(f'name: {name}, creator: {creator}')
     player_country = createCountry(selected_county_ids, name, creator)
 
     # check that country is contigious and within allowed area range
@@ -159,17 +157,27 @@ def get_new_country():
     if not is_valid_country:
         return jsonify({"error": error_message}), 400
     else:
+
+        # ALL MODES - set relevant items
         player_country.set_races()
         player_country.set_unemployment_rate()
         player_country.set_per_capita_income()
         player_country.set_gdp()
 
+        # CHALLENGE MODE - set items
         if data['challenge']:
             player_country.set_challenge_score(data['statKey'])
             submit_score(data, player_country.get_challenge_score())
 
+        # SANDBOX MODE - set items
+        else:
+            player_country.set_land_cover()
+            print(player_country.get_land_cover())
+
+        # enable map to only show user's counties
         filtered_geojson = filter_geojson_by_counties(selected_county_ids)
     
+        # structure response to send 
         response_data = {
             "geojson": filtered_geojson, 
             "stats": {
@@ -186,7 +194,8 @@ def get_new_country():
                 "perCapIncome": player_country.get_per_capita_income(),
                 "unemploymentRate": player_country.get_unemployment_rate(),
                 "gdp": player_country.get_gdp(),
-                "challengeScore": player_country.get_challenge_score() or "N/A"
+                "challengeScore": player_country.get_challenge_score() or "N/A",
+                "landCover": player_country.get_land_cover() or "N/A"
             }
         }
         return response_data, 200
@@ -312,7 +321,6 @@ def get_parks(county_ids: list) -> list:
 
             # Get list of all matched park codes, accounting for any overrides
             park_codes = [park_code_overrides.get(code[1], code[1]) for code in national_parks]
-            print(park_codes)
   
             return park_codes
         

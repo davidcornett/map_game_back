@@ -16,6 +16,7 @@ class County:
         #self._poverty_rate = None
         self._per_capita_income = None
         self._gdp = None
+        self._land_cover = {}
         #con.commit()
 
     def get_id(self) -> str:
@@ -106,4 +107,36 @@ class County:
             cur.execute(area_query, [self._id])
             return cur.fetchone()[0]
     
-    
+    def set_land_cover(self) -> None:
+        lc_query = """
+                SELECT square_miles, land_cover_code
+                FROM county_land_cover
+                WHERE county_id = %s;
+                """
+        
+        description_query = """
+                SELECT land_cover_code, category
+                FROM land_cover_codes;
+                """
+
+
+        with get_db_cursor() as cur:
+            # Fetch square miles and land cover codes
+            cur.execute(lc_query, [self._id])
+            county_data = cur.fetchall()
+            
+            # Fetch land cover descriptions
+            cur.execute(description_query)
+            categories = cur.fetchall()
+            
+            # Convert descriptions to a dictionary
+            category_dict = {code: cat for code, cat in categories}
+            
+            # Create the final dictionary mapping square miles to descriptions
+            for square_miles, land_cover_code in county_data:
+                if land_cover_code in category_dict:
+                    category = category_dict[land_cover_code]
+                if category in self._land_cover:
+                    self._land_cover[category] += square_miles  # Add to existing square miles
+                else:
+                    self._land_cover[category] = square_miles 

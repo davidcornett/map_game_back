@@ -42,7 +42,7 @@ for fips, year in states.items():
         data = response.json()
         df = pd.json_normalize(data, 'estimates')  # Adjust this based on actual data structure
         # Check if file exists and append without header or create new with header
-        header = not pd.io.common.file_exists('usda_api_batch2.csv')
+        header = not pd.io.common.file_exists('usda_api.csv')
         df.to_csv('usda_api.csv', mode='a', header=header, index=False)
     else:
         print(f"Failed to retrieve data for state FIPS {fips} for year {year}")

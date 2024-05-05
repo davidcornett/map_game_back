@@ -1,6 +1,6 @@
 **/.vscode
 **/venv
-**/map_env
+**/map_venv
 **/art
 **/.env
 **/.token

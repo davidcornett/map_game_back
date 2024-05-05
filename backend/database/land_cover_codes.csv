@@ -1,0 +1,20 @@
+landUseCode,Description,Category
+0002,Cropland,Agriculture
+0003,Pasture (improved through cultural practices),Agriculture
+0004,Idle farmland,Agriculture
+0007,Maintained wildlife opening,Other
+0010,Developed,Developed
+0011,"Cultural (business, residential, other intense human activity)",Developed
+0012,"Rights-of-way (improved road, railway, power line)",Developed
+0020,Forest,Forest
+0023,Census water,Water
+0001,Agricultural land,Agriculture
+0015,"Other (undeveloped beach, marsh, bog,snow, ice)",Other
+0017,Wetland,Beach/wetland
+0022,Noncensus water,Water
+0009,Rangeland,Other
+0016,Nonvegetated,Other
+0018,Beach,Beach/wetland
+0019,Nonforest,Other
+0008,Windbreak\/Shelterbelt,Other
+0021,Nonforest (presnfcd is null),Other
