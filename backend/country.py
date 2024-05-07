@@ -1,5 +1,7 @@
 import csv
 from collections import defaultdict
+from psycopg2 import sql
+from db import get_db_cursor
 
 county_adjacencies = [] # array of linked lists
 
@@ -17,6 +19,7 @@ class Country:
         self._challenge = None
         self._challenge_score = None
         self._land_cover = {}
+        self._similar_countries = [] # list of dict objects
     
     def get_counties(self):
         return self._counties
@@ -107,5 +110,49 @@ class Country:
 
     def get_land_cover(self) -> dict:
         return self._land_cover
+    
+    def set_similar_countries(self):
+        # sets user country's global population rank and the immediate 2 larger and 2 smaller countries
+
+        query = """
+            WITH input_population AS (
+            SELECT %s::BIGINT AS population, %s::VARCHAR AS country
+            ),
+            immediate_larger AS (
+            SELECT rank, country, population
+            FROM global_pop_ranks
+            WHERE population > (SELECT population FROM input_population)
+            ORDER BY population ASC
+            LIMIT 2
+            ),
+            immediate_smaller AS (
+            SELECT rank, country, population
+            FROM global_pop_ranks
+            WHERE population < (SELECT population FROM input_population)
+            ORDER BY population DESC
+            LIMIT 2
+            )
+            SELECT * FROM (
+            SELECT rank, country, population FROM immediate_larger
+            UNION ALL
+            SELECT NULL AS rank, (SELECT country FROM input_population), (SELECT population FROM input_population)
+            UNION ALL
+            SELECT rank, country, population FROM immediate_smaller
+            ) AS combined_results
+            ORDER BY population DESC
+        """
+
+        with get_db_cursor() as cur:
+            cur.execute(query, (self._pop, self._name))
+            results = cur.fetchall()
+            result_dicts = [
+            {'rank': r, 'country': c, 'population': p}
+            for r, c, p in results
+            ]
+            print(result_dicts)
+            self._similar_countries = result_dicts
+    
+    def get_similar_countries(self) -> list:
+        return self._similar_countries
 
 
