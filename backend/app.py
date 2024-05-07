@@ -152,7 +152,6 @@ def get_new_country():
 
     # check that country is contigious and within allowed area range
     is_valid_country, error_message = check_validity(player_country, max_area)
-    #print(player_country.get_pop())
 
     if not is_valid_country:
         return jsonify({"error": error_message}), 400
@@ -172,7 +171,7 @@ def get_new_country():
         # SANDBOX MODE - set items
         else:
             player_country.set_land_cover()
-            print(player_country.get_land_cover())
+            similar_pop_countries = get_similar_pops(player_country.get_pop(), player_country.get_name())
 
         # enable map to only show user's counties
         filtered_geojson = filter_geojson_by_counties(selected_county_ids)
@@ -195,7 +194,8 @@ def get_new_country():
                 "unemploymentRate": player_country.get_unemployment_rate(),
                 "gdp": player_country.get_gdp(),
                 "challengeScore": player_country.get_challenge_score() or "N/A",
-                "landCover": player_country.get_land_cover() or "N/A"
+                "landCover": player_country.get_land_cover() or "N/A",
+                "similarCountries": similar_pop_countries or "N/A"
             }
         }
         return response_data, 200
@@ -327,6 +327,47 @@ def get_parks(county_ids: list) -> list:
     except Exception as e:
         print(e)
         return jsonify({'error': 'Unable to process the request'}), 500
+
+
+def get_similar_pops(input_population, country_name):
+    # returns 2 larger and 2 smaller countries compared to the user's country
+    query = """
+        WITH input_population AS (
+        SELECT %s::BIGINT AS population, %s::VARCHAR AS country
+        ),
+        immediate_larger AS (
+        SELECT rank, country, population
+        FROM global_pop_ranks
+        WHERE population > (SELECT population FROM input_population)
+        ORDER BY population ASC
+        LIMIT 2
+        ),
+        immediate_smaller AS (
+        SELECT rank, country, population
+        FROM global_pop_ranks
+        WHERE population < (SELECT population FROM input_population)
+        ORDER BY population DESC
+        LIMIT 2
+        )
+        SELECT * FROM (
+        SELECT rank, country, population FROM immediate_larger
+        UNION ALL
+        SELECT NULL AS rank, (SELECT country FROM input_population), (SELECT population FROM input_population)
+        UNION ALL
+        SELECT rank, country, population FROM immediate_smaller
+        ) AS combined_results
+        ORDER BY population DESC
+    """
+
+    with get_db_cursor() as cur:
+        cur.execute(query, (input_population, country_name))
+        results = cur.fetchall()
+        result_dicts = [
+        {'rank': r, 'country': c, 'population': p}
+        for r, c, p in results
+        ]
+        print(result_dicts)
+        return result_dicts
 
 
 # Listener
