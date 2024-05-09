@@ -36,8 +36,14 @@ def get_db_cursor(commit=False):
         db_pool.putconn(con)
 
 def get_all_challenges():
+    # return all active unique challenge types, ignoring max size
     with get_db_cursor() as cur:
-        cur.execute("SELECT * FROM challenges WHERE active = TRUE;")
+        challenge_query = """
+            SELECT DISTINCT name, description, criteria
+            FROM challenges
+            WHERE active = TRUE;
+        """
+        cur.execute(challenge_query)
         rows = cur.fetchall()  # Get all rows as a list of tuples
         column_names = [desc[0] for desc in cur.description]  # Extract column names
         challenges_dicts = [dict(zip(column_names, row)) for row in rows]  # Create a list of dictionaries

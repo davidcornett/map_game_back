@@ -229,6 +229,7 @@ def get_challenges():
 def get_leaderboard():
     challenge_name = request.args.get('name', default=None, type=str)
     max_area = request.args.get('maxArea', default=None, type=int)
+    #print(f"Challenge name: {challenge_name}, Max area: {max_area}")
 
     if not challenge_name or max_area is None:
         # Early return if required parameters are missing
@@ -257,7 +258,8 @@ def get_leaderboard():
 def submit_score(data: dict, score: int):
     display_name = data.get('displayName', 'Anonymous')  # Default to 'Anonymous' if not provided
     country_name = data.get('countryName', 'Unknown')  # Default to 'Unknown' if not provided
-    challenge_id = data['challenge']['challenge_id']
+    challenge_id = get_challenge_id(data['challenge'], data['maxArea'])
+    #print(data)
     
     # Generate a UUID for the session
     session_id = str(uuid.uuid4())
@@ -273,6 +275,30 @@ def submit_score(data: dict, score: int):
         return jsonify({"error": str(e)}), 500
     
     return jsonify({"message": "Score submitted successfully"}), 201
+
+def get_challenge_id(challenge_data: dict, area: int) -> int:
+
+    criteria_type = challenge_data['criteria']['criteria_type']
+    goal_direction = challenge_data['criteria']['goal_direction']
+    description = challenge_data['description']
+    name = challenge_data['name']
+
+    id_query = """
+        SELECT challenge_id 
+        FROM challenges
+        WHERE criteria->>'criteria_type' = %s
+            AND criteria->>'goal_direction' = %s
+            AND description = %s
+            AND name = %s
+            AND max_area = %s;
+        """
+    
+    with get_db_cursor() as cur:
+        cur.execute(id_query, (criteria_type, goal_direction, description, name, area))
+        challenge_id = cur.fetchone()[0]
+    print(challenge_id)
+    return challenge_id
+
 
 @app.route('/get_national_parks', methods=['POST'])
 def get_national_parks():
