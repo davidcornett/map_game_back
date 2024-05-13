@@ -159,10 +159,10 @@ def get_new_country():
 
         # ALL MODES - set relevant items
         player_country.set_pop()
-        #player_country.set_races()
-        #player_country.set_unemployment_rate()
-        #player_country.set_per_capita_income()
-        #player_country.set_gdp()
+        player_country.set_races()
+        player_country.set_unemployment_rate()
+        player_country.set_per_capita_income()
+        player_country.set_gdp()
 
         # CHALLENGE MODE - set items
         if data['challenge']:
@@ -180,23 +180,22 @@ def get_new_country():
         filtered_geojson = filter_geojson_by_counties(selected_county_ids)
     
         # structure response to send 
-
         response_data = {
             "geojson": filtered_geojson, 
             "stats": {
                 "name": player_country.get_name(),
                 "creator": player_country.get_creator(),
                 "total_population": player_country.get_pop(), 
-                "pop_black": .5,
-                "pop_native": 0,
-                "pop_asian": 0,
-                "pop_pac_isl": 0,
-                "pop_two_plus": 0,
-                "pop_hispanic": .1,
-                "pop_white": .4,
-                "perCapIncome": 20000,
-                "unemploymentRate": .05,
-                "gdp": 50000000,
+                "pop_black": player_country.get_racial_percentage('black'),
+                "pop_native": player_country.get_racial_percentage('native'),
+                "pop_asian": player_country.get_racial_percentage('asian'),
+                "pop_pac_isl": player_country.get_racial_percentage('pac_isl'),
+                "pop_two_plus": player_country.get_racial_percentage('two_plus_races'),
+                "pop_hispanic": player_country.get_racial_percentage('hispanic'),
+                "pop_white": player_country.get_racial_percentage('white_not_hispanic'),
+                "perCapIncome": player_country.get_per_capita_income(),
+                "unemploymentRate": player_country.get_unemployment_rate(),
+                "gdp": player_country.get_gdp(),
                 "challengeScore": player_country.get_challenge_score() or "N/A",
                 "landCover": "N/A",
                 "similarCountries": "N/A"
