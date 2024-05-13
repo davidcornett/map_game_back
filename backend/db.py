@@ -14,7 +14,8 @@ db_pool = pool.SimpleConnectionPool(
     dbname='mapgame',
     user='david',
     password=db_password,
-    host='dpg-cp067bo21fec73fusmvg-a.ohio-postgres.render.com'
+    host='dpg-cp067bo21fec73fusmvg-a.ohio-postgres.render.com',
+    sslmode='require'
     )
 
 
@@ -23,7 +24,8 @@ db_config = {
     'dbname': 'mapgame',
     'user': 'david',
     'password': db_password,
-    'host': 'dpg-cp067bo21fec73fusmvg-a.ohio-postgres.render.com'
+    'host': 'dpg-cp067bo21fec73fusmvg-a.ohio-postgres.render.com',
+    'sslmode': 'require'
 }
 
 @contextmanager

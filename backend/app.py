@@ -158,10 +158,11 @@ def get_new_country():
     else:
 
         # ALL MODES - set relevant items
-        player_country.set_races()
-        player_country.set_unemployment_rate()
-        player_country.set_per_capita_income()
-        player_country.set_gdp()
+        player_country.set_pop()
+        #player_country.set_races()
+        #player_country.set_unemployment_rate()
+        #player_country.set_per_capita_income()
+        #player_country.set_gdp()
 
         # CHALLENGE MODE - set items
         if data['challenge']:
@@ -170,14 +171,39 @@ def get_new_country():
 
         # SANDBOX MODE - set items
         else:
-            player_country.set_land_cover()
-            player_country.set_similar_countries()
+            a = 5
+            #player_country.set_land_cover()
+            #player_country.set_similar_countries()
             #similar_pop_countries = get_similar_pops(player_country.get_pop(), player_country.get_name())
 
         # enable map to only show user's counties
         filtered_geojson = filter_geojson_by_counties(selected_county_ids)
     
         # structure response to send 
+
+        response_data = {
+            "geojson": filtered_geojson, 
+            "stats": {
+                "name": player_country.get_name(),
+                "creator": player_country.get_creator(),
+                "total_population": player_country.get_pop(), 
+                "pop_black": .5,
+                "pop_native": 0,
+                "pop_asian": 0,
+                "pop_pac_isl": 0,
+                "pop_two_plus": 0,
+                "pop_hispanic": .1,
+                "pop_white": .4,
+                "perCapIncome": 20000,
+                "unemploymentRate": .05,
+                "gdp": 50000000,
+                "challengeScore": player_country.get_challenge_score() or "N/A",
+                "landCover": "N/A",
+                "similarCountries": "N/A"
+            }
+        }
+
+        """
         response_data = {
             "geojson": filtered_geojson, 
             "stats": {
@@ -199,6 +225,7 @@ def get_new_country():
                 "similarCountries": player_country.get_similar_countries() or "N/A"
             }
         }
+        """
         return response_data, 200
 
 

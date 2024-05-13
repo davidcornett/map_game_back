@@ -8,10 +8,14 @@ county_adjacencies = [] # array of linked lists
 class Country:
     def __init__(self, counties: list, name: str, creator: str):
         self._counties = counties
+        self._id_placeholder = ', '.join(['%s'] * len(self._counties))
+        self._county_ids = [county.get_id() for county in self._counties]
         self._name = name
         self._creator = creator
-        self._area = sum(county.get_area() for county in self._counties)
-        self._pop = sum(county.get_pop() for county in self._counties)
+        #self._area = sum(county.get_area() for county in self._counties)
+        self._area = 24000
+        #self._pop = sum(county.get_pop() for county in self._counties)
+        self._pop = None
         self._racial_breakdown = None
         self._unemployment_rate = None
         self._per_capita_income = None
@@ -29,6 +33,17 @@ class Country:
     
     def get_creator(self) -> str:
         return self._creator
+    
+    def set_pop(self):
+        pop_query = f"""
+            SELECT SUM(total_pop) AS total_population
+            FROM countyid_year
+            WHERE year = 2021 AND countyID IN ({self._id_placeholder});
+        """
+
+        with get_db_cursor() as cur:
+            cur.execute(pop_query, self._county_ids)
+            self._pop = cur.fetchone()[0]
 
     def get_pop(self) -> int:
         return self._pop

@@ -9,15 +9,16 @@ from db import get_db_cursor
 class County:
     def __init__(self, id: str):
         self._id = id
-        self._pop = self.set_pop()
-        self._name = self.set_name()
+        #self._pop = self.set_pop()
+        self._pop = 450000
+        #self._name = self.set_name()
+        self._name = "flanders"
         self._racial_breakdown = None
         self._unemployment_rate = None
         #self._poverty_rate = None
         self._per_capita_income = None
         self._gdp = None
         self._land_cover = {}
-        #con.commit()
 
     def get_id(self) -> str:
         return self._id
