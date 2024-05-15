@@ -171,9 +171,8 @@ def get_new_country():
 
         # SANDBOX MODE - set items
         else:
-            a = 5
-            #player_country.set_land_cover()
-            #player_country.set_similar_countries()
+            player_country.set_land_cover()
+            player_country.set_similar_countries()
             #similar_pop_countries = get_similar_pops(player_country.get_pop(), player_country.get_name())
 
         # enable map to only show user's counties
@@ -197,8 +196,8 @@ def get_new_country():
                 "unemploymentRate": player_country.get_unemployment_rate(),
                 "gdp": player_country.get_gdp(),
                 "challengeScore": player_country.get_challenge_score() or "N/A",
-                "landCover": "N/A",
-                "similarCountries": "N/A"
+                "landCover": player_country.get_land_cover() or "N/A",
+                "similarCountries": player_country.get_similar_countries() or "N/A"
             }
         }
 

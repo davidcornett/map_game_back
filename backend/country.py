@@ -153,15 +153,22 @@ class Country:
         return self._challenge_score
     
     def set_land_cover(self):
-        for i in range(len(self._counties)):
-            self._counties[i].set_land_cover()
-            for key in self._counties[i]._land_cover.keys():
-                
-                if key in self._land_cover:
-                    self._land_cover[key] += self._counties[i]._land_cover[key]
-                else:
-                    self._land_cover[key] = self._counties[i]._land_cover[key]
-            #print(self._land_cover)
+
+        lc_query = f"""
+            SELECT lcc.category, SUM(clc.square_miles) AS total_square_miles
+            FROM county_land_cover clc
+            JOIN land_cover_codes lcc ON clc.land_cover_code = lcc.land_cover_code
+            WHERE clc.county_id IN ({self._id_placeholder})
+            GROUP BY lcc.category;
+        """
+
+        with get_db_cursor() as cur:
+            cur.execute(lc_query, self._county_ids)
+            results = cur.fetchall()
+        
+        # Process results to aggregate land cover by category
+        for category, total_square_miles in results:
+            self._land_cover[category] = total_square_miles
 
     def get_land_cover(self) -> dict:
         return self._land_cover
@@ -204,7 +211,6 @@ class Country:
             {'rank': r, 'country': c, 'population': p}
             for r, c, p in results
             ]
-            print(result_dicts)
             self._similar_countries = result_dicts
     
     def get_similar_countries(self) -> list:
