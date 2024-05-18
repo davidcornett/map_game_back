@@ -8,10 +8,12 @@ county_adjacencies = [] # array of linked lists
 class Country:
     def __init__(self, counties: list, name: str, creator: str):
         self._counties = counties
+        self._id_placeholder = ', '.join(['%s'] * len(self._counties))
+        self._county_ids = [county.get_id() for county in self._counties]
         self._name = name
         self._creator = creator
-        self._area = sum(county.get_area() for county in self._counties)
-        self._pop = sum(county.get_pop() for county in self._counties)
+        self._area = self.set_area()
+        self._pop = None
         self._racial_breakdown = None
         self._unemployment_rate = None
         self._per_capita_income = None
@@ -29,9 +31,30 @@ class Country:
     
     def get_creator(self) -> str:
         return self._creator
+    
+    def set_pop(self):
+        pop_query = f"""
+            SELECT SUM(total_pop) AS total_population
+            FROM countyid_year
+            WHERE year = 2021 AND countyID IN ({self._id_placeholder});
+        """
+
+        with get_db_cursor() as cur:
+            cur.execute(pop_query, self._county_ids)
+            self._pop = cur.fetchone()[0]
 
     def get_pop(self) -> int:
         return self._pop
+    
+    def set_area(self):
+        area_query = f"""
+            SELECT SUM(size) AS total_area
+            FROM counties
+            WHERE countyID IN ({self._id_placeholder});
+        """
+        with get_db_cursor() as cur:
+            cur.execute(area_query, self._county_ids)
+            return cur.fetchone()[0]
     
     def get_area(self) -> float:
         return self._area
@@ -42,43 +65,75 @@ class Country:
 
     def set_races(self):
         races = ['black', 'native', 'asian', 'pac_isl', 'two_plus_races', 'hispanic', 'white_not_hispanic']
-        racial_breakdown = defaultdict(int)
-        for i in range(len(self._counties)):
-            self._counties[i].set_races()
-            for j in range(len(races)):
-                racial_breakdown[races[j]] += self._counties[i]._racial_breakdown[races[j]]
-
+        race_columns = ', '.join([f"SUM({race}) AS total_{race}" for race in races])
+        
+        race_query = f"""
+            SELECT {race_columns}
+            FROM countyid_year
+            WHERE year = 2021 AND countyID IN ({self._id_placeholder});
+        """
+        with get_db_cursor() as cur:
+            cur.execute(race_query, self._county_ids)  # Execute the query with the county IDs safely passed as parameters
+            result = cur.fetchone()
+        racial_breakdown = {f"{races[i]}": result[i] for i in range(len(races))}
         self._racial_breakdown = racial_breakdown
     
     def get_racial_percentage(self, race: str) -> float:
         return self._racial_breakdown[race]/self._pop
     
     def set_unemployment_rate(self):
-        for i in range(len(self._counties)):
-            self._counties[i].set_unemployment_rate()
-        
-        wt_unemployment_total = sum(county.get_unemployment_rate() * county.get_pop() for county in self.get_counties())
-        self._unemployment_rate = round(wt_unemployment_total / self.get_pop(),2)
+        # query joins due to different years for pop vs unemployment data
+        unemployment_query = f"""
+        SELECT SUM(b.unemployment_rate * a.total_pop) / SUM(a.total_pop) AS weighted_unemployment_rate
+        FROM countyid_year AS a  -- Population data for 2021
+        JOIN countyid_year AS b  -- Unemployment data for 2019
+        ON a.countyID = b.countyID
+        WHERE 
+            a.year = 2021 AND 
+            b.year = 2019 AND 
+            a.countyID IN ({self._id_placeholder});    
+        """
+
+        with get_db_cursor() as cur:
+            cur.execute(unemployment_query, self._county_ids)
+            self._unemployment_rate = round(cur.fetchone()[0], 2)
     
     def get_unemployment_rate(self) -> float:
         return self._unemployment_rate
     
     def set_per_capita_income(self):
-        for i in range(len(self._counties)):
-            self._counties[i].set_per_capita_income()
-        
-        wt_income_total = sum(county.get_per_capita_income() * county.get_pop() for county in self.get_counties())
-        self._per_capita_income = round(wt_income_total / self.get_pop(),0)
+        # query joins due to different years for pop vs per capita income data
+        per_cap_query = f"""
+        SELECT SUM(CAST(b.per_capita_income AS BIGINT) * CAST(a.total_pop AS BIGINT)) / SUM(a.total_pop) AS weighted_per_capita_income
+        FROM countyid_year AS a  -- Population data for 2021
+        JOIN countyid_year AS b  -- Unemployment data for 2019
+        ON a.countyID = b.countyID
+        WHERE 
+            a.year = 2021 AND 
+            b.year = 2019 AND 
+            a.countyID IN ({self._id_placeholder});    
+        """
+
+        with get_db_cursor() as cur:
+            cur.execute(per_cap_query, self._county_ids)
+            self._per_capita_income = int(cur.fetchone()[0])
+
 
     def get_per_capita_income(self) -> int:
         return self._per_capita_income
     
     def set_gdp(self):
-        for i in range(len(self._counties)):
-            self._counties[i].set_gdp()
-        
-        self._gdp = sum(county.get_gdp() for county in self.get_counties())
+        gdp_query = f"""
+            SELECT sum(gdp) as total_gdp
+            FROM countyid_year
+            WHERE year=2022 
+            AND countyID IN ({self._id_placeholder});
+            """
 
+        with get_db_cursor() as cur:
+            cur.execute(gdp_query, self._county_ids)
+            self._gdp = cur.fetchone()[0] * 1000 # convert SQL data, stored in in 1000s
+        
     def get_gdp(self) -> int:
         return self._gdp
     
@@ -98,15 +153,22 @@ class Country:
         return self._challenge_score
     
     def set_land_cover(self):
-        for i in range(len(self._counties)):
-            self._counties[i].set_land_cover()
-            for key in self._counties[i]._land_cover.keys():
-                
-                if key in self._land_cover:
-                    self._land_cover[key] += self._counties[i]._land_cover[key]
-                else:
-                    self._land_cover[key] = self._counties[i]._land_cover[key]
-            #print(self._land_cover)
+
+        lc_query = f"""
+            SELECT lcc.category, SUM(clc.square_miles) AS total_square_miles
+            FROM county_land_cover clc
+            JOIN land_cover_codes lcc ON clc.land_cover_code = lcc.land_cover_code
+            WHERE clc.county_id IN ({self._id_placeholder})
+            GROUP BY lcc.category;
+        """
+
+        with get_db_cursor() as cur:
+            cur.execute(lc_query, self._county_ids)
+            results = cur.fetchall()
+        
+        # Process results to aggregate land cover by category
+        for category, total_square_miles in results:
+            self._land_cover[category] = total_square_miles
 
     def get_land_cover(self) -> dict:
         return self._land_cover
@@ -149,7 +211,6 @@ class Country:
             {'rank': r, 'country': c, 'population': p}
             for r, c, p in results
             ]
-            print(result_dicts)
             self._similar_countries = result_dicts
     
     def get_similar_countries(self) -> list:

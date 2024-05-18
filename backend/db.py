@@ -1,15 +1,31 @@
+import os
 from psycopg2 import pool
 from contextlib import contextmanager
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+db_password = os.getenv('DB_PASSWORD')
 
 # Initialize your connection pool
-db_pool = pool.SimpleConnectionPool(minconn=1, maxconn=10, dbname='mapgame', user='davidcornett', host='localhost')
+db_pool = pool.SimpleConnectionPool(
+    minconn=1, 
+    maxconn=10, 
+    dbname='mapgame',
+    user='david',
+    password=db_password,
+    host='dpg-cp067bo21fec73fusmvg-a.ohio-postgres.render.com',
+    sslmode='require'
+    )
 
 
 # Database connection parameters
 db_config = {
     'dbname': 'mapgame',
-    'user': 'davidcornett',
-    'host': 'localhost'
+    'user': 'david',
+    'password': db_password,
+    'host': 'dpg-cp067bo21fec73fusmvg-a.ohio-postgres.render.com',
+    'sslmode': 'require'
 }
 
 @contextmanager

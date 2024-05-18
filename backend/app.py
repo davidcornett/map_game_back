@@ -158,6 +158,7 @@ def get_new_country():
     else:
 
         # ALL MODES - set relevant items
+        player_country.set_pop()
         player_country.set_races()
         player_country.set_unemployment_rate()
         player_country.set_per_capita_income()
@@ -172,7 +173,6 @@ def get_new_country():
         else:
             player_country.set_land_cover()
             player_country.set_similar_countries()
-            #similar_pop_countries = get_similar_pops(player_country.get_pop(), player_country.get_name())
 
         # enable map to only show user's counties
         filtered_geojson = filter_geojson_by_counties(selected_county_ids)
@@ -199,6 +199,7 @@ def get_new_country():
                 "similarCountries": player_country.get_similar_countries() or "N/A"
             }
         }
+
         return response_data, 200
 
 
