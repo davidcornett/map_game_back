@@ -173,7 +173,6 @@ def get_new_country():
         else:
             player_country.set_land_cover()
             player_country.set_similar_countries()
-            #similar_pop_countries = get_similar_pops(player_country.get_pop(), player_country.get_name())
 
         # enable map to only show user's counties
         filtered_geojson = filter_geojson_by_counties(selected_county_ids)
@@ -201,29 +200,6 @@ def get_new_country():
             }
         }
 
-        """
-        response_data = {
-            "geojson": filtered_geojson, 
-            "stats": {
-                "name": player_country.get_name(),
-                "creator": player_country.get_creator(),
-                "total_population": player_country.get_pop(), 
-                "pop_black": player_country.get_racial_percentage('black'),
-                "pop_native": player_country.get_racial_percentage('native'),
-                "pop_asian": player_country.get_racial_percentage('asian'),
-                "pop_pac_isl": player_country.get_racial_percentage('pac_isl'),
-                "pop_two_plus": player_country.get_racial_percentage('two_plus_races'),
-                "pop_hispanic": player_country.get_racial_percentage('hispanic'),
-                "pop_white": player_country.get_racial_percentage('white_not_hispanic'),
-                "perCapIncome": player_country.get_per_capita_income(),
-                "unemploymentRate": player_country.get_unemployment_rate(),
-                "gdp": player_country.get_gdp(),
-                "challengeScore": player_country.get_challenge_score() or "N/A",
-                "landCover": player_country.get_land_cover() or "N/A",
-                "similarCountries": player_country.get_similar_countries() or "N/A"
-            }
-        }
-        """
         return response_data, 200
 
 
