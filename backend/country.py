@@ -1,11 +1,7 @@
-import csv
-from collections import defaultdict
-from psycopg2 import sql
 from db import get_db_cursor
 
-county_adjacencies = [] # array of linked lists
-
 class Country:
+    # object to store data for a user-created country
     def __init__(self, counties: list, name: str, creator: str):
         self._counties = counties
         self._id_placeholder = ', '.join(['%s'] * len(self._counties))
@@ -20,7 +16,7 @@ class Country:
         self._gdp = None
         self._challenge = None
         self._challenge_score = None
-        self._land_cover = {}
+        self._land_cover = {} # dict holds square miles of land cover by category
         self._similar_countries = [] # list of dict objects
     
     def get_counties(self):
@@ -33,6 +29,7 @@ class Country:
         return self._creator
     
     def set_pop(self):
+        # setter for country population
         pop_query = f"""
             SELECT SUM(total_pop) AS total_population
             FROM countyid_year
@@ -47,6 +44,7 @@ class Country:
         return self._pop
     
     def set_area(self):
+        # setter for country area
         area_query = f"""
             SELECT SUM(size) AS total_area
             FROM counties
@@ -59,11 +57,8 @@ class Country:
     def get_area(self) -> float:
         return self._area
 
-    def check_validity(self):
-        pass
-
-
     def set_races(self):
+        # setter for racial breakdown of country
         races = ['black', 'native', 'asian', 'pac_isl', 'two_plus_races', 'hispanic', 'white_not_hispanic']
         race_columns = ', '.join([f"SUM({race}) AS total_{race}" for race in races])
         
@@ -82,6 +77,8 @@ class Country:
         return self._racial_breakdown[race]/self._pop
     
     def set_unemployment_rate(self):
+        # setter for country unemployment rate
+
         # query joins due to different years for pop vs unemployment data
         unemployment_query = f"""
         SELECT SUM(b.unemployment_rate * a.total_pop) / SUM(a.total_pop) AS weighted_unemployment_rate
@@ -102,6 +99,8 @@ class Country:
         return self._unemployment_rate
     
     def set_per_capita_income(self):
+        # setter for country per capita income
+
         # query joins due to different years for pop vs per capita income data
         per_cap_query = f"""
         SELECT SUM(CAST(b.per_capita_income AS BIGINT) * CAST(a.total_pop AS BIGINT)) / SUM(a.total_pop) AS weighted_per_capita_income
@@ -123,6 +122,8 @@ class Country:
         return self._per_capita_income
     
     def set_gdp(self):
+        # setter for country GDP
+
         gdp_query = f"""
             SELECT sum(gdp) as total_gdp
             FROM countyid_year
@@ -136,11 +137,10 @@ class Country:
         
     def get_gdp(self) -> int:
         return self._gdp
-    
-    def set_challenge(self, challenge):
-        self._challenge = challenge
 
     def set_challenge_score(self, key: str):
+        # setter for challenge score
+
         # Match the provided key to the corresponding attribute
         if key == 'total_population':
             self._challenge_score = self.get_pop()
@@ -153,6 +153,7 @@ class Country:
         return self._challenge_score
     
     def set_land_cover(self):
+        # setter for country land cover (forest, developed, etc)
 
         lc_query = f"""
             SELECT lcc.category, SUM(clc.square_miles) AS total_square_miles
