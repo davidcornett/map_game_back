@@ -5,3 +5,7 @@
 **/.env
 **/.token
 **/.token.txt
+**/make_geojson.py
+**/check_park_codes.py
+**/usda_api.py
+**/usda_api.csv

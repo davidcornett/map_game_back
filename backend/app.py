@@ -1,5 +1,4 @@
 from array import array
-from ast import Str
 from flask import Flask, render_template, request, flash, jsonify
 from flask_cors import CORS
 import os
@@ -13,8 +12,6 @@ import requests
 from db import get_all_challenges 
 from db import get_db_cursor
 
-from xml.dom import minidom
-
 county_adjacencies = [] # array of linked lists
 
 # global var: TBD replace with DB calls
@@ -27,9 +24,8 @@ app = Flask(__name__)
 CORS(app)  # enable CORS for all routes
 
 def main():
-    adjacency()
+    adjacency() # load county adjacencies
     
-
 # Routes 
 @app.route('/')
 def root():
@@ -37,14 +33,18 @@ def root():
 
 @app.route('/get_ids')
 def get_ids() -> array:
+    # serves list of all county IDs in user's country
     return jsonify([x.get_id() for x in player_country.get_counties()])
 
 @app.route('/get_area/<id>')
 def get_area(id) -> str:
+    # serves area of county with given ID
     c = County(str(id))
     return jsonify(c.get_area())
 
 def process_countyID(id: str) -> list:
+    # returns list of character groups in county ID
+
     output = []
     elem = ''
 
@@ -61,16 +61,13 @@ def process_countyID(id: str) -> list:
 
 def createCountry(county_ids: list, name: str, creator: str) -> object:
     # returns Country, comprised of Counties
+
     county_list = [County(id) for id in county_ids] # create list of County objects from list of county IDs
     return Country(county_list, name, creator)
 
-
-def build_new_map(county_ids: list) -> str:
-    county_ids = ['25025', '31007', '06075']
-
-
 def adjacency():
-    county_counter = 0;
+    # populate global 
+
     with open('county_neighbors.csv') as file:
         data = list(csv.reader(file, delimiter=','))
         county_adjacencies.append(data[1])
@@ -83,6 +80,8 @@ def adjacency():
 
 
 def check_validity(country: object, max_area) -> tuple[bool, str]:
+    # returns tuple of validity status for new country and error message
+
     # CHECK 1: AREA
     if country.get_area() not in range(0, max_area):
         return False, "Country area is not within allowed size range."
@@ -115,7 +114,8 @@ def check_validity(country: object, max_area) -> tuple[bool, str]:
     return (True, None) if counter == len(county_ids) else (False, "The country is not contiguous.")
 
 
-def adj_binary_search(id: int) -> bool:
+def adj_binary_search(id: int):
+    # binary search for adjacent counties of a given county id, for ids in asencding order
     
     # get lowest and highest county id from global array of arrays 
     low = 0
@@ -127,7 +127,6 @@ def adj_binary_search(id: int) -> bool:
         mid_item = int(county_adjacencies[mid][0])
         
         if id == mid_item:
-            #print("returning adjacencies: " + str(county_adjacencies[mid][1:]))
             return county_adjacencies[mid][1:]
 
         elif (low == high):
@@ -141,6 +140,8 @@ def adj_binary_search(id: int) -> bool:
 
 @app.route('/get_new_country', methods=['POST'])
 def get_new_country():
+    # primary endpoint for creating a new country
+
     data = request.get_json()
     selected_county_ids = data.get('selected_county_ids', [])
 
@@ -204,6 +205,8 @@ def get_new_country():
 
 
 def filter_geojson_by_counties(selected_county_ids):
+    # returns geojson with only selected counties
+
     with open('static/counties.geojson', 'r') as file:
         data = geojson.load(file)
     
@@ -219,6 +222,8 @@ def filter_geojson_by_counties(selected_county_ids):
 
 @app.route('/challenges', methods=['GET'])
 def get_challenges():
+    # serves json of all challenges
+
     try:
         challenges = get_all_challenges()  # Fetch challenges from the database
         return jsonify(challenges), 200
@@ -228,6 +233,8 @@ def get_challenges():
 
 @app.route('/leaderboard', methods=['GET'])
 def get_leaderboard():
+    # serves leaderboard specific to user's challenge
+
     challenge_name = request.args.get('name', default=None, type=str)
     max_area = request.args.get('maxArea', default=None, type=int)
     #print(f"Challenge name: {challenge_name}, Max area: {max_area}")
@@ -257,10 +264,11 @@ def get_leaderboard():
     return jsonify(leaderboard_entries)
 
 def submit_score(data: dict, score: int):
+    # submit challenge score to DB
+
     display_name = data.get('displayName', 'Anonymous')  # Default to 'Anonymous' if not provided
     country_name = data.get('countryName', 'Unknown')  # Default to 'Unknown' if not provided
     challenge_id = get_challenge_id(data['challenge'], data['maxArea'])
-    #print(data)
     
     # Generate a UUID for the session
     session_id = str(uuid.uuid4())
@@ -278,6 +286,7 @@ def submit_score(data: dict, score: int):
     return jsonify({"message": "Score submitted successfully"}), 201
 
 def get_challenge_id(challenge_data: dict, area: int) -> int:
+    # looks up and returns challenge ID based on the selected challenge criteria and max area
 
     criteria_type = challenge_data['criteria']['criteria_type']
     goal_direction = challenge_data['criteria']['goal_direction']
@@ -297,7 +306,6 @@ def get_challenge_id(challenge_data: dict, area: int) -> int:
     with get_db_cursor() as cur:
         cur.execute(id_query, (criteria_type, goal_direction, description, name, area))
         challenge_id = cur.fetchone()[0]
-    print(challenge_id)
     return challenge_id
 
 
