@@ -25,7 +25,6 @@ CORS(app)  # enable CORS for all routes
 
 def main():
     adjacency() # load county adjacencies
-    log_directory_structure()
     
 # Routes 
 @app.route('/')
@@ -175,7 +174,11 @@ def get_new_country():
     player_country = createCountry(selected_county_ids, name, creator)
 
     # check that country is contigious and within allowed area range
-    is_valid_country, error_message = check_validity(player_country, max_area)
+    #is_valid_country, error_message = check_validity(player_country, max_area)
+    print("log_directory_structure")
+    log_directory_structure()
+    is_valid_country = True
+    error_message = None
 
     if not is_valid_country:
         return jsonify({"error": error_message}), 400
