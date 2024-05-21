@@ -120,6 +120,7 @@ def adj_binary_search(id: int):
     # get lowest and highest county id from global array of arrays 
     low = 0
     high = len(county_adjacencies)
+    print(f"high: {high}")
     
     while True:
 
