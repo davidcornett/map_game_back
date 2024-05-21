@@ -68,7 +68,7 @@ def createCountry(county_ids: list, name: str, creator: str) -> object:
 def adjacency():
     # populate global 
 
-    with open('county_neighbors.csv') as file:
+    with open('/backend/county_neighbors.csv') as file:
         data = list(csv.reader(file, delimiter=','))
         county_adjacencies.append(data[1])
         length = len(data)
@@ -120,7 +120,6 @@ def adj_binary_search(id: int):
     # get lowest and highest county id from global array of arrays 
     low = 0
     high = len(county_adjacencies)
-    print(f"high: {high}")
     
     while True:
 
