@@ -68,7 +68,7 @@ def createCountry(county_ids: list, name: str, creator: str) -> object:
 def adjacency():
     # populate global 
 
-    with open('/backend/county_neighbors.csv') as file:
+    with open('backend/county_neighbors.csv') as file:
         data = list(csv.reader(file, delimiter=','))
         county_adjacencies.append(data[1])
         length = len(data)
