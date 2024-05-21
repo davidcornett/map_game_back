@@ -68,6 +68,12 @@ def createCountry(county_ids: list, name: str, creator: str) -> object:
 def adjacency():
     # populate global 
 
+    csv_path = get_csv_path()
+    
+    if not os.path.exists(csv_path):
+        print(f"File not found: {csv_path}")
+        return
+
     with open('backend/county_neighbors.csv') as file:
         data = list(csv.reader(file, delimiter=','))
         county_adjacencies.append(data[1])
@@ -77,6 +83,22 @@ def adjacency():
                 county_adjacencies[-1].append(data[i][1])
             else:
                 county_adjacencies.append(data[i])
+
+
+def log_directory_structure(path='.'):
+    for root, dirs, files in os.walk(path):
+        level = root.replace(path, '').count(os.sep)
+        indent = ' ' * 4 * level
+        print(f"{indent}{os.path.basename(root)}/")
+        subindent = ' ' * 4 * (level + 1)
+        for f in files:
+            print(f"{subindent}{f}")
+
+def get_csv_path():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    csv_path = os.path.join(script_dir, 'county_neighbors.csv')
+    return csv_path
+
 
 
 def check_validity(country: object, max_area) -> tuple[bool, str]:
@@ -368,6 +390,7 @@ def get_parks(county_ids: list) -> list:
 # Listener
 if __name__ == "__main__":
     # bind to PORT if defined, otherwise use default
+    log_directory_structure()
     main()
     port = int(os.environ.get('PORT', 6205))
     app.run(port=port) 
