@@ -25,6 +25,7 @@ CORS(app)  # enable CORS for all routes
 
 def main():
     adjacency() # load county adjacencies
+    log_directory_structure()
     
 # Routes 
 @app.route('/')
@@ -390,7 +391,6 @@ def get_parks(county_ids: list) -> list:
 # Listener
 if __name__ == "__main__":
     # bind to PORT if defined, otherwise use default
-    log_directory_structure()
     main()
     port = int(os.environ.get('PORT', 6205))
     app.run(port=port) 
