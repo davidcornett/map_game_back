@@ -24,6 +24,7 @@ app = Flask(__name__)
 CORS(app)  # enable CORS for all routes
 
 def main():
+    print("main is running")
     adjacency() # load county adjacencies
     
 # Routes 
@@ -74,7 +75,7 @@ def adjacency():
         print(f"File not found: {csv_path}")
         return
 
-    with open('backend/county_neighbors.csv') as file:
+    with open('county_neighbors.csv') as file:
         data = list(csv.reader(file, delimiter=','))
         county_adjacencies.append(data[1])
         length = len(data)
