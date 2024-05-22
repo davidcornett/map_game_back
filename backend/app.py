@@ -23,7 +23,7 @@ load_dotenv()  # Load environment variables from .env file
 app = Flask(__name__)
 CORS(app)  # enable CORS for all routes
 
-def main():
+def init_app():
     print("main is running")
     adjacency() # load county adjacencies
     
@@ -67,14 +67,8 @@ def createCountry(county_ids: list, name: str, creator: str) -> object:
     return Country(county_list, name, creator)
 
 def adjacency():
+
     # populate global 
-
-    csv_path = get_csv_path()
-    
-    if not os.path.exists(csv_path):
-        print(f"File not found: {csv_path}")
-        return
-
     with open('county_neighbors.csv') as file:
         data = list(csv.reader(file, delimiter=','))
         county_adjacencies.append(data[1])
@@ -84,23 +78,6 @@ def adjacency():
                 county_adjacencies[-1].append(data[i][1])
             else:
                 county_adjacencies.append(data[i])
-
-
-def log_directory_structure(path='.'):
-    for root, dirs, files in os.walk(path):
-        level = root.replace(path, '').count(os.sep)
-        indent = ' ' * 4 * level
-        print(f"{indent}{os.path.basename(root)}/")
-        subindent = ' ' * 4 * (level + 1)
-        for f in files:
-            print(f"{subindent}{f}")
-
-def get_csv_path():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    csv_path = os.path.join(script_dir, 'county_neighbors.csv')
-    return csv_path
-
-
 
 def check_validity(country: object, max_area) -> tuple[bool, str]:
     # returns tuple of validity status for new country and error message
@@ -175,11 +152,7 @@ def get_new_country():
     player_country = createCountry(selected_county_ids, name, creator)
 
     # check that country is contigious and within allowed area range
-    #is_valid_country, error_message = check_validity(player_country, max_area)
-    print("log_directory_structure")
-    log_directory_structure()
-    is_valid_country = True
-    error_message = None
+    is_valid_country, error_message = check_validity(player_country, max_area)
 
     if not is_valid_country:
         return jsonify({"error": error_message}), 400
@@ -391,10 +364,10 @@ def get_parks(county_ids: list) -> list:
         print(e)
         return jsonify({'error': 'Unable to process the request'}), 500
 
+init_app() # set up county adjacencies data structure
 
 # Listener
 if __name__ == "__main__":
     # bind to PORT if defined, otherwise use default
-    main()
     port = int(os.environ.get('PORT', 6205))
     app.run(port=port) 
