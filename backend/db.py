@@ -6,26 +6,39 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 db_password = os.getenv('DB_PASSWORD')
+environment = os.getenv('ENVIRONMENT')
+
+if environment == 'development':
+    db_name = os.getenv('LOCAL_DB_NAME')
+    db_user = os.getenv('LOCAL_DB_USER')
+    db_host = os.getenv('LOCAL_DB_HOST')
+    db_sslmode = os.getenv('LOCAL_DB_SSLMODE')
+else:  # Assume production environment
+    db_name = os.getenv('RENDER_DB_NAME')
+    db_user = os.getenv('RENDER_DB_USER')
+    db_password = os.getenv('RENDER_DB_PASSWORD')
+    db_host = os.getenv('RENDER_DB_HOST')
+    db_sslmode = os.getenv('RENDER_DB_SSLMODE')
 
 # Initialize your connection pool
 db_pool = pool.SimpleConnectionPool(
     minconn=1, 
     maxconn=10, 
-    dbname='mapgame',
-    user='david',
+    dbname=db_name,
+    user=db_user,
     password=db_password,
-    host='dpg-cp067bo21fec73fusmvg-a.ohio-postgres.render.com',
-    sslmode='require'
+    host=db_host,
+    sslmode=db_sslmode
     )
 
 
 # Database connection parameters
 db_config = {
-    'dbname': 'mapgame',
-    'user': 'david',
+    'dbname': db_name,
+    'user': db_user,
     'password': db_password,
-    'host': 'dpg-cp067bo21fec73fusmvg-a.ohio-postgres.render.com',
-    'sslmode': 'require'
+    'host': db_host,
+    'sslmode': db_sslmode
 }
 
 @contextmanager

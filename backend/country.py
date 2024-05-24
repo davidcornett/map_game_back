@@ -146,6 +146,8 @@ class Country:
             self._challenge_score = self.get_pop()
         elif key == 'gdp':
             self._challenge_score = self.get_gdp()
+        elif key == 'per_capita_income':
+            self._challenge_score = self.get_per_capita_income()
         else:
             return None
 

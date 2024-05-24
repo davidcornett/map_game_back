@@ -24,7 +24,6 @@ app = Flask(__name__)
 CORS(app)  # enable CORS for all routes
 
 def init_app():
-    print("main is running")
     adjacency() # load county adjacencies
     
 # Routes 
@@ -237,7 +236,6 @@ def get_leaderboard():
 
     challenge_name = request.args.get('name', default=None, type=str)
     max_area = request.args.get('maxArea', default=None, type=int)
-    #print(f"Challenge name: {challenge_name}, Max area: {max_area}")
 
     if not challenge_name or max_area is None:
         # Early return if required parameters are missing
