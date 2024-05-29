@@ -12,3 +12,9 @@ class County:
         with get_db_cursor() as cur:
             cur.execute(area_query, [self._id])
             return cur.fetchone()[0]
+    
+    def get_pop(self) -> int:
+        pop_query = """ SELECT total_pop from countyid_year WHERE year = 2021 AND countyID = %s;"""
+        with get_db_cursor() as cur:
+            cur.execute(pop_query, [self._id])
+            return cur.fetchone()[0]

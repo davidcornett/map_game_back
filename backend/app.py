@@ -42,6 +42,12 @@ def get_area(id) -> str:
     c = County(str(id))
     return jsonify(c.get_area())
 
+@app.route('/get_pop/<id>')
+def get_pop(id) -> str:
+    # serves population of county with given ID
+    c = County(str(id))
+    return jsonify(c.get_pop())
+
 def process_countyID(id: str) -> list:
     # returns list of character groups in county ID
 
