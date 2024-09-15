@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 import requests
 from db import get_all_challenges 
 from db import get_db_cursor
+from better_profanity import profanity
 
 county_adjacencies = [] # array of linked lists
 
@@ -154,6 +155,13 @@ def get_new_country():
     global player_country
     name = data.get('countryName', 'Unknown') 
     creator = data.get('displayName', 'Anonymous')
+
+    # profanity checks
+    if profanity.contains_profanity(name):
+        name = 'Unknown'
+    if profanity.contains_profanity(creator):
+        creator = 'Anonymous'
+
     player_country = createCountry(selected_county_ids, name, creator)
 
     # check that country is contigious and within allowed area range
