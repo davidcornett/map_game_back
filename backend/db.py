@@ -14,11 +14,11 @@ if environment == 'development':
     db_host = os.getenv('LOCAL_DB_HOST')
     db_sslmode = os.getenv('LOCAL_DB_SSLMODE')
 else:  # Assume production environment
-    db_name = os.getenv('RENDER_DB_NAME')
-    db_user = os.getenv('RENDER_DB_USER')
-    db_password = os.getenv('RENDER_DB_PASSWORD')
-    db_host = os.getenv('RENDER_DB_HOST')
-    db_sslmode = os.getenv('RENDER_DB_SSLMODE')
+    db_name = os.getenv('NEON_DB_NAME')
+    db_user = os.getenv('NEON_DB_USER')
+    db_password = os.getenv('NEON_DB_PASSWORD')
+    db_host = os.getenv('NEON_DB_HOST')
+    db_sslmode = os.getenv('NEON_DB_SSLMODE')
 
 # Initialize your connection pool
 db_pool = pool.SimpleConnectionPool(
