@@ -328,6 +328,10 @@ def wake_neon():
     with get_db_cursor() as cur:
         cur.execute(wake_query)
         return jsonify({"message": "Neon database is awake"}), 200
+    
+@app.route('/wake_render', methods=['GET'])
+def wake():
+    return jsonify({"message": "Hello world!"})
 
 @app.route('/get_national_parks', methods=['POST'])
 def get_national_parks():
