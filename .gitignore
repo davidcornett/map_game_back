@@ -10,3 +10,5 @@
 **/usda_api.py
 **/usda_api.csv
 **/dev_instructions.txt
+**/db_dump.sql
+**/selected_tables_dump.sql

@@ -320,6 +320,14 @@ def get_challenge_id(challenge_data: dict, area: int) -> int:
         challenge_id = cur.fetchone()[0]
     return challenge_id
 
+@app.route('/wake_neon', methods=['GET'])
+def wake_neon():    
+    wake_query = """
+        SELECT 1;
+        """
+    with get_db_cursor() as cur:
+        cur.execute(wake_query)
+        return jsonify({"message": "Neon database is awake"}), 200
 
 @app.route('/get_national_parks', methods=['POST'])
 def get_national_parks():
