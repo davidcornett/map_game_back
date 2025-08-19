@@ -188,6 +188,9 @@ def get_new_country():
             player_country.set_land_cover()
             player_country.set_similar_countries()
 
+            # log sandbox country creation
+            log_sandbox_country(data)
+
         # enable map to only show user's counties
         filtered_geojson = filter_geojson_by_counties(selected_county_ids)
     
@@ -296,6 +299,26 @@ def submit_score(data: dict, score: int):
         return jsonify({"error": str(e)}), 500
     
     return jsonify({"message": "Score submitted successfully"}), 201
+
+def log_sandbox_country(data: dict):
+
+    display_name = data.get('displayName', 'Anonymous')  # Default to 'Anonymous' if not provided
+    country_name = data.get('countryName', 'Unknown')  # Default to 'Unknown' if not provided
+    fips_codes = data.get('selected_county_ids', [])
+
+    try:
+        with get_db_cursor(commit=True) as cur:
+            cur.execute("""
+                INSERT INTO sandbox_countries (country_name, user_name, fips_codes)
+                VALUES (%s, %s, %s)
+            """, (country_name, display_name, fips_codes))
+    except Exception as e:
+    # Handle any errors that occur during insert
+        return jsonify({"error": str(e)}), 500
+    
+    return jsonify({"message": "Score submitted successfully"}), 201
+
+
 
 def get_challenge_id(challenge_data: dict, area: int) -> int:
     # looks up and returns challenge ID based on the selected challenge criteria and max area
